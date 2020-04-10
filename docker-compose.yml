@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  app:
+    build: .docker
+    ports:
+      - '80:80'
+    depends_on:
+      - db
+    volumes:
+      - .:/var/www
+      - ./public/.htaccess.docker:/var/www/public/.htaccess
+
+  db:
+    image: mariadb:10.3
+    environment:
+      - MYSQL_DATABASE=gloggi-bot
+      - MYSQL_ROOT_PASSWORD=will-be-randomized-and-output-on-the-console
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_USER=gloggi-bot
+      - MYSQL_PASSWORD=gloggi-bot
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - db
+    ports:
+      - '8081:80'
