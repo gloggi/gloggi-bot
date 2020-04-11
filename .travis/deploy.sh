@@ -28,18 +28,13 @@ chmod 600 .travis/id_rsa
 ssh-add .travis/id_rsa
 
 echo "Uploading files to the server..."
-lftp <<EOF
-  set sftp:auto-confirm true
-  set dns:order "inet"
-  open -u $SSH_USERNAME, sftp://$SSH_HOST
-  cd $SSH_DIRECTORY
-  mirror -enRv -x '^\.' -x '^tests' -x '^storage/logs/.*' -x '^storage/app/.*'
-  mirror -Rv -f .env
-EOF
+# Add the host fingerprint to the known hosts
+echo "|1|dV4qsau1GbVSd7SouuBbZX/7lY0=|TrxRD/WiO0lwzNYp9i3QXTEMi5Q= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKlHpAA/T87DCjPTHb2o5nLuxfPDhj00cZB2lBlNjbbb" >> ~/.ssh/known_hosts
+rsync -avz -e ssh --exclude=/. --include=/.env --exclude=/tests --exclude=/storage/logs/ --exclude=/storage/app/ ./ "${SSH_USERNAME}@${SSH_HOST}:${SSH_DIRECTORY}"
 
 echo "All files uploaded to the server."
 
-ssh -l $SSH_USERNAME -T $SSH_HOST <<EOF
+ssh -l "$SSH_USERNAME" -T "$SSH_HOST" <<EOF
   cd $SSH_DIRECTORY
   php artisan storage:link
 #  php artisan migrate --force
