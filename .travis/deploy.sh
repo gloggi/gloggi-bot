@@ -9,6 +9,10 @@ sed -ri "s~^APP_KEY=.*$~APP_KEY=$APP_KEY~" .env
 sed -ri "s~^APP_DEBUG=.*$~APP_DEBUG=${APP_DEBUG:-false}~" .env
 sed -ri "s~^APP_URL=.*$~APP_URL=$APP_URL~" .env
 
+sed -ri "s~^BEEKEEPER_API_BASE_URL=.*$~BEEKEEPER_API_BASE_URL=${BEEKEEPER_API_BASE_URL}~" .env
+sed -ri "s~^BEEKEEPER_BOT_TOKEN=.*$~BEEKEEPER_BOT_TOKEN=${BEEKEEPER_BOT_TOKEN}~" .env
+sed -ri "s~^BEEKEEPER_WEBHOOK_ID_MESSAGE=.*$~BEEKEEPER_WEBHOOK_ID_MESSAGE=${BEEKEEPER_WEBHOOK_ID_MESSAGE}~" .env
+
 #sed -ri "s~^DB_HOST=.*$~DB_HOST=${DB_HOST:-localhost}~" .env
 #sed -ri "s~^DB_DATABASE=.*$~DB_DATABASE=${DB_DATABASE:-bot}~" .env
 #sed -ri "s~^DB_USERNAME=.*$~DB_USERNAME=$DB_USERNAME~" .env
