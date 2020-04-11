@@ -9,23 +9,33 @@ use Symfony\Component\Yaml\Yaml;
 
 class ApiController extends Controller
 {
-    protected function checkRequestFromBeekeeper(Request $request, $endpoint) {
+    protected function checkRequest(Request $request, $endpoint) {
+        // Check webhook UUID according to Beekeeper documentation
         if($request->input('webhook_id') !== config("beekeeper.webhook_ids.$endpoint", Str::random(40))) {
+            abort(400);
+        }
+
+        // Check the message is not from the Bot itself
+        if ($request->input('payload.message.sent_by_user', true) !== false) {
+            abort(204);
+        }
+
+        // Check that the conversation is a private 1 on 1 conversation
+        $conversationId = $request->input('payload.message.conversation_id');
+        if (collect($this->sendApiRequest('conversations/' . $conversationId . '/members'))->count() !== 2) {
             abort(400);
         }
     }
 
-    protected function sendMessage(Request $request, $message) {
+    protected function sendApiRequest($endpoint, $method = 'get', $payload = null) {
         $headers = ['Authorization' => 'Token ' . config('beekeeper.bot_token')];
+        $url = config('beekeeper.api_base_url') . $endpoint;
+        return Http::withHeaders($headers)->$method($url, $payload)->json();
+    }
 
+    protected function sendMessage(Request $request, $message) {
         $conversationId = $request->input('payload.message.conversation_id');
-
-        $url = config('beekeeper.api_base_url') . 'conversations/' . $conversationId . '/messages';
-
-        Http::withHeaders($headers)->post($url, [
-            'text' => $message
-        ]);
-
+        $this->sendApiRequest('conversations/' . $conversationId . '/messages', 'post', ['text' => $message]);
         // TODO log to database
         echo "Sent message \"" . $message . "\"\n";
     }
@@ -64,8 +74,7 @@ class ApiController extends Controller
 
     public function message(Request $request) {
 
-        $this->checkRequestFromBeekeeper($request, 'message');
-        // TODO check 1 on 1 message
+        $this->checkRequest($request, 'message');
 
         $message = $this->selectRelevantUserAnswer($request);
 
