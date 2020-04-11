@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Yaml\Yaml;
 
@@ -37,7 +38,7 @@ class ApiController extends Controller
         $conversationId = $request->input('payload.message.conversation_id');
         $this->sendApiRequest('conversations/' . $conversationId . '/messages', 'post', ['text' => $message]);
         // TODO log to database
-        echo "Sent message \"" . $message . "\"\n";
+        Log::info("Sent message \"$message\" to conversation $conversationId\n");
     }
 
     protected function getBotConfig() {
@@ -75,6 +76,7 @@ class ApiController extends Controller
     public function message(Request $request) {
 
         $this->checkRequest($request, 'message');
+        Log::info(print_r($request->all(), true));
 
         $message = $this->selectRelevantUserAnswer($request);
 
