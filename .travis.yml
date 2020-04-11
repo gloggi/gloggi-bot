@@ -1,11 +1,6 @@
 os:
   - linux
 
-addons:
-  apt:
-    packages:
-      - lftp
-
 language: php
 
 before_install:
