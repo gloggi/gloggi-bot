@@ -22,7 +22,7 @@ docker-compose run --entrypoint "composer install --no-dev" app
 # Travis CI uses OpenSSL 1.0.2g  1 Mar 2016. Files encrypted with newer versions of OpenSSL are not decryptable by
 # the Travis CI version, error message is "bad decrypt". So to encrypt a file, use the following:
 # docker run --rm -v $(pwd):/app -w /app frapsoft/openssl aes-256-cbc -k "<password>" -in <input_file> -out <output_file>
-openssl aes-256-cbc -k "$ID_RSA_PASSWORD" -in .travis/id_rsa.enc -out .travis/id_rsa -d
+openssl aes-256-cbc -k "$ID_RSA_PASSWORD" -in .travis/id_rsa_travis.enc -out .travis/id_rsa -d
 eval "$(ssh-agent -s)"
 chmod 600 .travis/id_rsa
 ssh-add .travis/id_rsa
