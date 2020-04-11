@@ -34,7 +34,7 @@ ssh-add .travis/id_rsa
 echo "Uploading files to the server..."
 # Add the host fingerprint to the known hosts
 echo "|1|dV4qsau1GbVSd7SouuBbZX/7lY0=|TrxRD/WiO0lwzNYp9i3QXTEMi5Q= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKlHpAA/T87DCjPTHb2o5nLuxfPDhj00cZB2lBlNjbbb" >> ~/.ssh/known_hosts
-rsync -avz -e ssh --exclude=/. --include=/.env --exclude=/tests --exclude=/storage/logs/ --exclude=/storage/app/ ./ "${SSH_USERNAME}@${SSH_HOST}:${SSH_DIRECTORY}"
+rsync -avz -e ssh --exclude=/. --include=/.env --exclude=/resources/bot.yml --exclude=/tests --exclude=/storage/logs/ --exclude=/storage/app/ ./ "${SSH_USERNAME}@${SSH_HOST}:${SSH_DIRECTORY}"
 
 echo "All files uploaded to the server."
 
