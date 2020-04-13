@@ -96,7 +96,7 @@ class ApiController extends Controller
         $userMessage = $this->normalize($this->getUserMessage());
 
         $activeLevel = $this->getLevelConfig($level);
-        $userSays = $activeLevel->get('user_says');
+        $userSays = collect($activeLevel->get('user_says'));
 
         // TODO implement direct responses to a certain user message
         return collect($userSays->first(function($entry) use($userMessage) {
