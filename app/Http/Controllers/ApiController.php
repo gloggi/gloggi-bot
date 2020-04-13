@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\LevelChange;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -114,6 +115,9 @@ class ApiController extends Controller
         return $matchingOption->get('next_level');
     }
 
+    /**
+     * @param $config Collection
+     */
     protected function sendBotMessage($config) {
         collect($config->get('bot_says', []))->each(function($message) {
             // TODO implement sending images
