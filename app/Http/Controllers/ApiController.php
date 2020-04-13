@@ -98,15 +98,17 @@ class ApiController extends Controller
         $activeLevel = $this->getLevelConfig($level);
         $userSays = collect($activeLevel->get('user_says'));
 
-        // TODO implement direct responses to a certain user message
-        return collect($userSays->first(function($entry) use($userMessage) {
+        $matchingOption = collect($userSays->first(function ($entry) use ($userMessage) {
             return $this->normalize(collect($entry)->get('text')) === $userMessage;
-        }, $activeLevel->get('default')))->get('next_level');
+        }, $activeLevel->get('default')));
+
+        $this->sendBotMessage($matchingOption);
+
+        return $matchingOption->get('next_level');
     }
 
-    protected function sendBotResponse($level) {
-        collect($this->getLevelConfig($level)
-            ->get('bot_says', []))->each(function($message) {
+    protected function sendBotMessage($config) {
+        collect($config->get('bot_says', []))->each(function($message) {
             // TODO implement sending images
             $this->sendMessage(collect($message)->get('text'));
         });
@@ -137,7 +139,7 @@ class ApiController extends Controller
 
         if ($newLevel !== null) {
             $this->persistCurrentLevel($this->getUserId(), $this->getuserName(), $newLevel);
-            $this->sendBotResponse($newLevel);
+            $this->sendBotMessage($this->getLevelConfig($newLevel));
         }
 
     }
