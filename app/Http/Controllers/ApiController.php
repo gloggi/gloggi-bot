@@ -10,8 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Yaml\Yaml;
 
-class ApiController extends Controller
-{
+class ApiController extends Controller {
     /** @var Request $request */
     protected $request;
     protected $botConfig;
@@ -63,16 +62,16 @@ class ApiController extends Controller
         }
 
         // Check the processed message is not from the Bot itself
-        if ($this->isSentByBot() !== false) {
+        if($this->isSentByBot() !== false) {
             abort(204);
         }
 
         // Check that the conversation is a private 1 on 1 conversation
-        if (collect($this->sendApiRequest('conversations/' . $this->getConversationId() . '/members'))->count() !== 2) {
+        if(collect($this->sendApiRequest('conversations/' . $this->getConversationId() . '/members'))->count() !== 2) {
             abort(400);
         }
 
-        if ($this->getBotConfig()->count() < 1) {
+        if($this->getBotConfig()->count() < 1) {
             Log::error('Bot config in resources/bot.yml should be a nonempty array');
             abort(500);
         }
@@ -90,13 +89,13 @@ class ApiController extends Controller
     }
 
     protected function getLevelConfig($level) {
-        return collect($this->getBotConfig()->first(function($l) use($level) {
+        return collect($this->getBotConfig()->first(function($l) use ($level) {
             return '' . collect($l)->get('level') === '' . $level;
         }, $this->getBotConfig()->first()));
     }
 
     protected function normalize($answer) {
-        if ($answer === null) return null;
+        if($answer === null) return null;
         return strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $answer));
     }
 
@@ -106,7 +105,7 @@ class ApiController extends Controller
         $activeLevel = $this->getLevelConfig($level);
         $userSays = collect($activeLevel->get('user_says'));
 
-        $matchingOption = collect($userSays->first(function ($entry) use ($userMessage) {
+        $matchingOption = collect($userSays->first(function($entry) use ($userMessage) {
             return $this->normalize(collect($entry)->get('text')) === $userMessage;
         }, $activeLevel->get('default')));
 
@@ -119,10 +118,15 @@ class ApiController extends Controller
      * @param $config Collection
      */
     protected function sendBotMessage($config) {
-        collect($config->get('bot_says', []))->each(function($message) {
-            // TODO implement sending images
-            $this->sendMessage(collect($message)->get('text'));
-        });
+        $botSays = $config->get('bot_says', []);
+        if(!is_array($botSays)) {
+            $this->sendMessage($botSays);
+        } else {
+            collect($botSays)->each(function($message) {
+                // TODO implement sending images
+                $this->sendMessage(collect($message)->get('text'));
+            });
+        }
     }
 
     protected function findCurrentLevel($userId, $userName) {
@@ -147,7 +151,7 @@ class ApiController extends Controller
 
         $newLevel = $this->parseUserMessage($currentLevel);
 
-        if ($newLevel !== null) {
+        if($newLevel !== null) {
             $this->persistCurrentLevel($this->getUserId(), $this->getuserName(), $newLevel);
             $this->sendBotMessage($this->getLevelConfig($newLevel));
         }
