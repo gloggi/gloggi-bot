@@ -13,10 +13,10 @@ sed -ri "s~^BEEKEEPER_API_BASE_URL=.*$~BEEKEEPER_API_BASE_URL=${BEEKEEPER_API_BA
 sed -ri "s~^BEEKEEPER_BOT_TOKEN=.*$~BEEKEEPER_BOT_TOKEN=${BEEKEEPER_BOT_TOKEN}~" .env
 sed -ri "s~^BEEKEEPER_WEBHOOK_ID_MESSAGE=.*$~BEEKEEPER_WEBHOOK_ID_MESSAGE=${BEEKEEPER_WEBHOOK_ID_MESSAGE}~" .env
 
-#sed -ri "s~^DB_HOST=.*$~DB_HOST=${DB_HOST:-localhost}~" .env
-#sed -ri "s~^DB_DATABASE=.*$~DB_DATABASE=${DB_DATABASE:-bot}~" .env
-#sed -ri "s~^DB_USERNAME=.*$~DB_USERNAME=$DB_USERNAME~" .env
-#sed -ri "s~^DB_PASSWORD=.*$~DB_PASSWORD=$DB_PASSWORD~" .env
+sed -ri "s~^DB_HOST=.*$~DB_HOST=${DB_HOST:-localhost}~" .env
+sed -ri "s~^DB_DATABASE=.*$~DB_DATABASE=${DB_DATABASE:-bot}~" .env
+sed -ri "s~^DB_USERNAME=.*$~DB_USERNAME=$DB_USERNAME~" .env
+sed -ri "s~^DB_PASSWORD=.*$~DB_PASSWORD=$DB_PASSWORD~" .env
 
 sed -ri "s~^SENTRY_LARAVEL_DSN=.*$~SENTRY_LARAVEL_DSN=${SENTRY_LARAVEL_DSN:-null}~" .env
 sed -ri "s~^SENTRY_USER_FEEDBACK_URL=.*$~SENTRY_USER_FEEDBACK_URL=$SENTRY_USER_FEEDBACK_URL~" .env
@@ -41,5 +41,5 @@ echo "All files uploaded to the server."
 ssh -l "$SSH_USERNAME" -T "$SSH_HOST" <<EOF
   cd $SSH_DIRECTORY
   php artisan storage:link
-#  php artisan migrate --force
+  php artisan migrate --force
 EOF

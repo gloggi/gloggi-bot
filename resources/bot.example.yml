@@ -1,25 +1,26 @@
-default:
+- level: 0
+  user_says:
+    - text: hallo
+      next_level: 1
+    - text: hoi
+      next_level: 1
+  default:
+    bot_says:
+      - text: Das hani leider nöd verstande. Probiers doch nomal anderscht z säge. Ich bin halt au nur en Bot...
+
+- level: 1
   bot_says:
-    - text: Das hani leider nöd verstande. Probiers doch nomal anderscht z säge. Ich bin halt au nur en Bot...
-
-levels:
-  - level: 0
-    user_says:
-      - text: hallo
-        next_level: 1
-      - text: hoi
-        next_level: 1
-
-  - level: 1
+    - text: "Willkomme bi de Gloggi-Cyberchallenge!"
+    - text: "Falls du dich freusch, schriib 'YAY!!'"
+  user_says:
+    - text: yay
+      next_level: 2
+    - text: yayy
+      next_level: 2
+  default:
     bot_says:
-      - text: "Willkomme bi de Gloggi-Cyberchallenge!"
-      - text: "Falls du dich freusch, schriib 'YAY!!'"
-    user_says:
-      - text: yay
-        next_level: 2
-      - text: yayy
-        next_level: 2
+        - text: Das hani leider nöd verstande. Probiers doch nomal anderscht z säge. Ich bin halt au nur en Bot...
 
-  - level: 2
-    bot_says:
-      - text: "YAYYY!"
+- level: 2
+  bot_says:
+    - text: "YAYYY!"
