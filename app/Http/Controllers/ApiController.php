@@ -11,20 +11,58 @@ use Symfony\Component\Yaml\Yaml;
 
 class ApiController extends Controller
 {
-    protected function checkRequest(Request $request, $endpoint) {
+    /** @var Request $request */
+    protected $request;
+    protected $botConfig;
+
+    protected $webhookId;
+    protected $sentByBot;
+    protected $conversationId;
+    protected $userId;
+    protected $userName;
+    protected $userMessage;
+
+    protected function getWebhookId($default = null) {
+        return $this->webhookId ?? $this->webhookId = $this->request->input('webhook_id', $default);
+    }
+
+    protected function isSentByBot() {
+        return $this->sentByBot ?? $this->sentByBot = $this->request->input('payload.message.sent_by_user');
+    }
+
+    protected function getConversationId() {
+        return $this->conversationId ?? $this->conversationId = $this->request->input('payload.message.conversation_id');
+    }
+
+    protected function getUserId() {
+        return $this->userId ?? $this->userId = $this->request->input('payload.message.user_id');
+    }
+
+    protected function getUserName() {
+        return $this->userName ?? $this->userName = $this->request->input('payload.message.profile');
+    }
+
+    protected function getUserMessage() {
+        return $this->userMessage ?? $this->userMessage = $this->request->input('payload.message.text');
+    }
+
+    protected function getBotConfig() {
+        return $this->botConfig ?? $this->botConfig = collect(Yaml::parse(file_get_contents(__DIR__ . '/../../../resources/bot.yml')));
+    }
+
+    protected function checkRequest($endpoint) {
         // Check webhook UUID according to Beekeeper documentation
-        if($request->input('webhook_id') !== config("beekeeper.webhook_ids.$endpoint", Str::random(40))) {
+        if($this->getWebhookId() !== config("beekeeper.webhook_ids.$endpoint", Str::random(40))) {
             abort(400);
         }
 
-        // Check the message is not from the Bot itself
-        if ($request->input('payload.message.sent_by_user', true) !== false) {
+        // Check the processed message is not from the Bot itself
+        if ($this->isSentByBot() !== false) {
             abort(204);
         }
 
         // Check that the conversation is a private 1 on 1 conversation
-        $conversationId = $request->input('payload.message.conversation_id');
-        if (collect($this->sendApiRequest('conversations/' . $conversationId . '/members'))->count() !== 2) {
+        if (collect($this->sendApiRequest('conversations/' . $this->getConversationId() . '/members'))->count() !== 2) {
             abort(400);
         }
 
@@ -37,21 +75,16 @@ class ApiController extends Controller
         return Http::withHeaders($headers)->$method($url, $payload)->json();
     }
 
-    protected function sendMessage(Request $request, $message) {
-        $conversationId = $request->input('payload.message.conversation_id');
-        $this->sendApiRequest('conversations/' . $conversationId . '/messages', 'post', ['text' => $message]);
-        Log::info("Sent message \"$message\" to conversation $conversationId\n");
-    }
-
-    protected function getBotConfig() {
-        return collect(Yaml::parse(file_get_contents(__DIR__ . '/../../../resources/bot.yml')));
+    protected function sendMessage($message) {
+        $this->sendApiRequest('conversations/' . $this->getConversationId() . '/messages', 'post', ['text' => $message]);
+        Log::info("Sent message '$message' to conversation " . $this->getConversationId());
     }
 
     protected function getLevelConfig($level) {
-        // TODO useful fallback if level doesn't exist in bot.yml
-        return collect($this->getBotConfig()
-            ->first(function($l) use($level) { return '' . collect($l)->get('level') === '' . $level; })
-        );
+        // TODO useful fallback if level doesn't exist in bot config
+        return collect($this->getBotConfig()->first(function($l) use($level) {
+            return '' . collect($l)->get('level') === '' . $level;
+        }));
     }
 
     protected function normalize($answer) {
@@ -59,11 +92,11 @@ class ApiController extends Controller
         return strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $answer));
     }
 
-    protected function parseUserMessage(Request $request, $level) {
-        $userMessage = $this->normalize($request->input('payload.message.text', ''));
+    protected function parseUserMessage($level) {
+        $userMessage = $this->normalize($this->getUserMessage());
 
         $activeLevel = $this->getLevelConfig($level);
-        $userSays = collect($activeLevel->get('user_says'));
+        $userSays = $activeLevel->get('user_says');
 
         // TODO implement direct responses to a certain user message
         return collect($userSays->first(function($entry) use($userMessage) {
@@ -71,16 +104,16 @@ class ApiController extends Controller
         }, $activeLevel->get('default')))->get('next_level');
     }
 
-    protected function sendBotResponse($level, Request $request) {
+    protected function sendBotResponse($level) {
         collect($this->getLevelConfig($level)
-            ->get('bot_says', []))->each(function($message) use($request) {
+            ->get('bot_says', []))->each(function($message) {
             // TODO implement sending images
-            $this->sendMessage($request, collect($message)->get('text'));
+            $this->sendMessage(collect($message)->get('text'));
         });
     }
 
     protected function findCurrentLevel($userId, $userName) {
-        // TODO fallback to first level if level not in bot.yml
+        // TODO fallback to first level if level not in bot config
         $user = LevelChange::latest()->firstOrNew(['user_id' => $userId], ['level' => '0', 'name' => $userName]);
         $level = $user->level;
         Log::info("User $userName ($userId) is currently at level '$level'");
@@ -94,19 +127,17 @@ class ApiController extends Controller
 
     public function message(Request $request) {
 
-        $this->checkRequest($request, 'message');
+        $this->request = $request;
+        $this->checkRequest('message');
 
-        $userId = $request->input('payload.message.user_id');
-        $userName = $request->input('payload.message.profile');
-
-        $currentLevel = $this->findCurrentLevel($userId, $userName);
+        $currentLevel = $this->findCurrentLevel($this->getUserId(), $this->getUserName());
         Log::info(print_r($request->all(), true));
 
-        $newLevel = $this->parseUserMessage($request, $currentLevel);
+        $newLevel = $this->parseUserMessage($currentLevel);
 
         if ($newLevel !== null) {
-            $this->persistCurrentLevel($userId, $userName, $newLevel);
-            $this->sendBotResponse($newLevel, $request);
+            $this->persistCurrentLevel($this->getUserId(), $this->getuserName(), $newLevel);
+            $this->sendBotResponse($newLevel);
         }
 
     }
