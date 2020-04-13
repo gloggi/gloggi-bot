@@ -21,6 +21,7 @@ class ApiController extends Controller
     protected $userId;
     protected $userName;
     protected $userMessage;
+    protected $firstLevel;
 
     protected function getWebhookId($default = null) {
         return $this->webhookId ?? $this->webhookId = $this->request->input('webhook_id', $default);
@@ -50,6 +51,10 @@ class ApiController extends Controller
         return $this->botConfig ?? $this->botConfig = collect(Yaml::parse(file_get_contents(__DIR__ . '/../../../resources/bot.yml')));
     }
 
+    protected function getFirstLevel() {
+        return $this->firstLevel ?? $this->firstLevel = collect($this->getBotConfig()->first())->get('level');
+    }
+
     protected function checkRequest($endpoint) {
         // Check webhook UUID according to Beekeeper documentation
         if($this->getWebhookId() !== config("beekeeper.webhook_ids.$endpoint", Str::random(40))) {
@@ -66,7 +71,10 @@ class ApiController extends Controller
             abort(400);
         }
 
-        // TODO check bot.yml is a nonempty array
+        if ($this->getBotConfig()->count() < 1) {
+            Log::error('Bot config in resources/bot.yml should be a nonempty array');
+            abort(500);
+        }
     }
 
     protected function sendApiRequest($endpoint, $method = 'get', $payload = null) {
@@ -81,10 +89,9 @@ class ApiController extends Controller
     }
 
     protected function getLevelConfig($level) {
-        // TODO useful fallback if level doesn't exist in bot config
         return collect($this->getBotConfig()->first(function($l) use($level) {
             return '' . collect($l)->get('level') === '' . $level;
-        }));
+        }, $this->getBotConfig()->first()));
     }
 
     protected function normalize($answer) {
@@ -115,8 +122,7 @@ class ApiController extends Controller
     }
 
     protected function findCurrentLevel($userId, $userName) {
-        // TODO fallback to first level if level not in bot config
-        $user = LevelChange::latest()->firstOrNew(['user_id' => $userId], ['level' => '0', 'name' => $userName]);
+        $user = LevelChange::latest()->firstOrNew(['user_id' => $userId], ['level' => $this->getFirstLevel(), 'name' => $userName]);
         $level = $user->level;
         Log::info("User $userName ($userId) is currently at level '$level'");
         return $level;
