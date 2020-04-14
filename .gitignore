@@ -12,4 +12,5 @@ npm-debug.log
 yarn-error.log
 /.idea
 resources/bot.yml
+resources/bot-images/*
 .ready
