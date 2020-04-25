@@ -13,4 +13,5 @@ yarn-error.log
 /.idea
 resources/bot.yml
 resources/bot-images/*
+resources/schleck.yml
 .ready
