@@ -21,8 +21,8 @@ class SchleckRequest extends FormRequest {
      */
     public function rules() {
         return [
-            'source' => 'string|required',
-            'target' => 'string|required',
+            's' => 'string|required',
+            't' => 'string|required',
         ];
     }
 }

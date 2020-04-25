@@ -43,8 +43,8 @@ class SchleckController extends Controller {
         $this->readConfig();
 
         $sentence = trans($this->sentences[array_rand($this->sentences)], [
-            'source' => $request->get('source'),
-            'target' => $request->get('target'),
+            'source' => $request->get('s'),
+            'target' => $request->get('t'),
             'url' => config('schleck.url')
         ]);
         $label = $this->labels[array_rand($this->labels)];
