@@ -13,6 +13,9 @@ sed -ri "s~^BEEKEEPER_API_BASE_URL=.*$~BEEKEEPER_API_BASE_URL=${BEEKEEPER_API_BA
 sed -ri "s~^BEEKEEPER_BOT_TOKEN=.*$~BEEKEEPER_BOT_TOKEN=${BEEKEEPER_BOT_TOKEN}~" .env
 sed -ri "s~^BEEKEEPER_WEBHOOK_ID_MESSAGE=.*$~BEEKEEPER_WEBHOOK_ID_MESSAGE=${BEEKEEPER_WEBHOOK_ID_MESSAGE}~" .env
 
+sed -ri "s~^SCHLECK_URL=.*$~SCHLECK_URL=${SCHLECK_URL}~" .env
+sed -ri "s~^SCHLECK_BEEKEEPER_STREAM_ID=.*$~SCHLECK_BEEKEEPER_STREAM_ID=${SCHLECK_BEEKEEPER_STREAM_ID}~" .env
+
 sed -ri "s~^DB_HOST=.*$~DB_HOST=${DB_HOST:-localhost}~" .env
 sed -ri "s~^DB_DATABASE=.*$~DB_DATABASE=${DB_DATABASE:-bot}~" .env
 sed -ri "s~^DB_USERNAME=.*$~DB_USERNAME=$DB_USERNAME~" .env
@@ -34,7 +37,7 @@ ssh-add .travis/id_rsa
 echo "Uploading files to the server..."
 # Add the host fingerprint to the known hosts
 echo "|1|dV4qsau1GbVSd7SouuBbZX/7lY0=|TrxRD/WiO0lwzNYp9i3QXTEMi5Q= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKlHpAA/T87DCjPTHb2o5nLuxfPDhj00cZB2lBlNjbbb" >> ~/.ssh/known_hosts
-rsync -avz -e ssh --delete --exclude=/. --include=/.env --exclude=/resources/bot.yml --exclude=/resources/bot-images/ --exclude=/tests --exclude=/storage/logs/ --exclude=/storage/app/ ./ "${SSH_USERNAME}@${SSH_HOST}:${SSH_DIRECTORY}"
+rsync -avz -e ssh --delete --exclude=/. --include=/.env --exclude=/resources/bot.yml --exclude=/resources/bot-images/ --exclude=/resources/schleck.yml --exclude=/tests --exclude=/storage/logs/ --exclude=/storage/app/ ./ "${SSH_USERNAME}@${SSH_HOST}:${SSH_DIRECTORY}"
 
 echo "All files uploaded to the server."
 
