@@ -129,6 +129,13 @@ class ApiController extends Controller {
         }, $this->getBotConfig()->first()));
     }
 
+    protected function checkGlobalKeyword($message) {
+        $result = collect($this->getBotConfig()->first(function($l) use ($message) {
+            return '' . collect($l)->get('global_keyword') === '' . $message;
+        }))->get('level', null);
+        return $result;
+    }
+
     protected function normalize($answer) {
         if($answer === null) return null;
         return strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $answer));
@@ -136,6 +143,10 @@ class ApiController extends Controller {
 
     protected function parseUserMessage($level) {
         $userMessage = $this->normalize($this->getUserMessage());
+
+        if ($globalJumpLevel = $this->checkGlobalKeyword($userMessage)) {
+            return $globalJumpLevel;
+        }
 
         $activeLevel = $this->getLevelConfig($level);
         $userSays = collect($activeLevel->get('user_says'));

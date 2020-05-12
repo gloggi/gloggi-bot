@@ -1,4 +1,5 @@
 - level: 0
+  global_keyword: reset
   user_says:
     - text: hallo
       next_level: 1
