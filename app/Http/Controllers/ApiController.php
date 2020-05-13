@@ -141,10 +141,11 @@ class ApiController extends Controller {
         return strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $answer));
     }
 
-    protected function parseUserMessage($level) {
+    protected function parseUserMessage($level, $userId) {
         $userMessage = $this->normalize($this->getUserMessage());
 
         if ($globalJumpLevel = $this->checkGlobalKeyword($userMessage)) {
+            $this->markCurrentLevelAsJump($userId);
             return $globalJumpLevel;
         }
 
@@ -187,6 +188,13 @@ class ApiController extends Controller {
         return LevelChange::create(['user_id' => $userId, 'name' => $userName, 'level' => $level]);
     }
 
+    protected function markCurrentLevelAsJump($userId) {
+        Log::info("User ($userId) is making a level jump");
+        if ($latest = LevelChange::latest()->where('user_id', $userId)->first()) {
+            $latest->update(['jumped_away' => true]);
+        }
+    }
+
     public function message(Request $request) {
 
         $this->request = $request;
@@ -195,7 +203,7 @@ class ApiController extends Controller {
         $currentLevel = $this->findCurrentLevel($this->getUserId(), $this->getUserName());
         Log::info(print_r($request->all(), true));
 
-        $newLevel = $this->parseUserMessage($currentLevel);
+        $newLevel = $this->parseUserMessage($currentLevel, $this->getUserId());
 
         if($newLevel !== null) {
             $this->persistCurrentLevel($this->getUserId(), $this->getuserName(), $newLevel);

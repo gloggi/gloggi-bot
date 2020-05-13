@@ -4,6 +4,13 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $user_id
+ * @property string $level
+ * @property boolean $jumped_away
+ */
 class LevelChange extends Model
 {
     /**
@@ -12,7 +19,7 @@ class LevelChange extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'user_id', 'level',
+        'name', 'user_id', 'level', 'jumped_away',
     ];
 
     /**
