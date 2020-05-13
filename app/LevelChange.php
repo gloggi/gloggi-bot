@@ -30,11 +30,4 @@ class LevelChange extends Model
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-
-    public static function getReport() {
-        return LevelChange::orderBy('created_at')->get()->reduce(function ($carry, $item) {
-            $carry[$item->name] = $item->level;
-            return $carry;
-        }, []);
-    }
 }
