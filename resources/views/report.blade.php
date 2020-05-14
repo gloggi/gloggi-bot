@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>GloggiBot Report</title>
     <link href="{{ URL::asset('/tailwind.min.css') }}" rel="stylesheet">
     <link rel="icon" href="{{ URL::asset('/favicon.png') }}" type="image/x-icon"/>
