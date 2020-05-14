@@ -234,4 +234,70 @@ class ApiController extends Controller {
         Carbon::setLocale('de_CH.UTF8');
         return view('detail', ['name' => $reportData[0]->name, 'levelChanges' => $reportData]);
     }
+
+    /**
+     * @param $startLevel Collection YAML structure of starting level
+     * @param $endLevels Collection list of target level names
+     * @return Collection mapping from target level names to length and path
+     */
+    protected function findShortestPathsTo(Collection $startLevel, Collection $endLevels) {
+        $queue = [['depth' => 0, 'path' => '', 'level' => $startLevel]];
+        $discovered = collect(collect($startLevel)->get('level'));
+        $result = $endLevels->mapWithKeys(function($level) { return [$level => ['length' => INF, 'path' => null]]; });
+
+        while (count($queue) > 0) {
+            $queueEntry = array_shift($queue);
+            $depth = $queueEntry['depth'];
+            $path = $queueEntry['path'];
+            $current = collect($queueEntry['level']);
+            foreach ($current->get('user_says', []) as $userSays) {
+                $userSays = collect($userSays);
+                $nextLevel = $userSays->get('next_level');
+                $text = $userSays->get('text');
+                if (! $discovered->contains($nextLevel)) {
+                    if ($endLevels->contains($nextLevel)) {
+                        $result[$nextLevel] = ['length' => $depth, 'path' => $path];
+                    }
+                    $discovered->push($nextLevel);
+                    array_push($queue, ['depth' => $depth+1, 'path' => $path.$text, 'level' => $this->getLevelConfig($nextLevel)]);
+
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    public function checkConfig() {
+        $result = [];
+
+        // Check that all next_level entries correspond to a real level
+        $definedLevelNames = $this->getBotConfig()->map(function($level) { return collect($level)->get('level', ''); });
+        $result['erroneousNextLevels'] = $this->getBotConfig()->mapWithKeys(function($level) use($definedLevelNames) {
+            return [
+                collect($level)->get('level', '-- no level name --') => collect(collect($level)->get('user_says', []))
+                    ->map(function($userSays) { return collect($userSays)->get('next_level', ''); })
+                    ->filter(function ($nextLevel) use($definedLevelNames) { return $nextLevel !== '' && ! $definedLevelNames->containsStrict($nextLevel); })
+            ];
+        })->filter(function($level) { return count($level) !== 0; });
+
+        // Check that all levels can be reached
+        $allNextLevelNames = $this->getBotConfig()
+            ->flatMap(function($level) {
+                return collect(array_merge(collect($level)->get('user_says', []), [collect($level)->get('default')]))
+                    ->map(function($userSays) { return collect($userSays)->get('next_level'); });
+            });
+        $result['unreachableLevels'] = $definedLevelNames->filter(function($levelName) use($allNextLevelNames){ return !$allNextLevelNames->containsStrict($levelName); });
+
+        // Check that level names are unique
+        $result['duplicateLevelNames'] = $definedLevelNames->diffAssoc($definedLevelNames->uniqueStrict());
+
+        // Calculate the shortest path to each ending
+        $startLevel = collect($this->getBotConfig()->first(function ($level) { return collect($level)->get('global_keyword', '') === 'reset'; }));
+        $endLevels = $this->getBotConfig()->filter(function ($level) {
+            return Str::startsWith(collect($level)->get('level', ''), 'end.');
+        })->map(function($level) { return collect($level)->get('level', ''); })->values();
+        $result['endLevels'] = $this->findShortestPathsTo($startLevel, $endLevels);
+        return $result;
+    }
 }
