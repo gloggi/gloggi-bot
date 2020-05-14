@@ -11,10 +11,10 @@
 </head>
 <body class="bg-gray-200 py-4">
 <div class="block container mx-auto">
-    <h1 class="text-xl font-semibold text-center mb-6">GloggiBot Report</h1>
+    <h1 class="text-xl font-semibold text-center mb-6"><a href="{{ URL::route('report') }}">GloggiBot Report</a></h1>
     @foreach($data as $key => $user)
         <div class="max-w-md mx-auto my-4 p-6 bg-white rounded-lg shadow-xl">
-            <h4 class="text-xl font-semibold text-gray-900 leading flex mb-5"><img src="{{ URL::asset('/bot.svg') }}" class="object-scale-down h-6 mr-2 opacity-50" /><span class="flex-grow opacity-75">{{ $key }}</span></h4>
+            <h4 class="text-xl font-semibold text-gray-900 leading flex mb-5"><img src="{{ URL::asset('/bot.svg') }}" class="object-scale-down h-6 mr-2 opacity-50" /><span class="flex-grow opacity-75"><a href="{{ URL::route('detail', ['id' => $user[0]->user_id]) }}">{{ $key }}</a></span></h4>
             @foreach($user as $levelChange)
                 <div class="text-base leading-normal flex w-full my-3">
                     <span class="text-black flex-grow">{{ $levelChange->level }}</span>

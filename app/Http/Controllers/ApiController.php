@@ -214,8 +214,8 @@ class ApiController extends Controller {
     }
 
     public function report() {
-        // SELECT * from level_changes l WHERE jumped_away=true OR created_at = (SELECT MAX(created_at) FROM level_changes m WHERE m.user_id=l.user_id)
-        $reportData = LevelChange::select('name', 'level', 'created_at')->where('jumped_away', true)->orWhere('created_at', function ($query) {
+        // SELECT * from level_changes WHERE jumped_away=true OR created_at = (SELECT MAX(created_at) FROM level_changes m WHERE m.user_id=level_changes.user_id) ORDER BY created_at DESC
+        $reportData = LevelChange::select('name', 'level', 'user_id', 'created_at')->where('jumped_away', true)->orWhere('created_at', function ($query) {
             $tableName = (new LevelChange)->getTable();
             $query->select('created_at')->from($tableName, 'newest')->whereColumn('newest.user_id', "$tableName.user_id")->latest()->limit(1);
         })->orderBy('created_at', 'desc')->get()->groupBy('name')->sortByDesc(function($user) {
@@ -224,5 +224,14 @@ class ApiController extends Controller {
 
         Carbon::setLocale('de_CH.UTF8');
         return view('report', ['data' => $reportData]);
+    }
+
+    public function detail($id) {
+        // SELECT * from level_changes WHERE user_id=? ORDER BY created_at DESC
+        $reportData = LevelChange::select('name', 'level', 'created_at')->where('user_id', $id)
+            ->orderBy('created_at', 'desc')->get()->sortByDesc(function($levelChange) { return $levelChange->created_at; })->all();
+
+        Carbon::setLocale('de_CH.UTF8');
+        return view('detail', ['name' => $reportData[0]->name, 'levelChanges' => $reportData]);
     }
 }
